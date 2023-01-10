@@ -3,10 +3,17 @@
 //
 #include <pcap.h>
 #include <cstdlib>
+#include <cstring>
+#include <iostream>
+#include <iomanip>
+#include <vector>
 
 #ifndef AIRODUMP_AIRODUMP_H
 #define AIRODUMP_AIRODUMP_H
 #define FIXED_PARAM_LEN 12
+#define MAC_LEN 6
+
+using namespace std;
 
 struct ieee80211_radiotap_header {
     u_int8_t        it_version;     /* set to 0 */
@@ -29,6 +36,12 @@ enum ManagementTag {
     CHANNEL = 0x03
 };
 
+struct AP {
+    u_int8_t    BSSID[6];
+    int         beacons;
+    char       ESSID[30];
+} __attribute__((__packed__));
+
 class Airodump {
 private:
     char* device_;
@@ -38,14 +51,18 @@ private:
     int current_packet_length;
     int packet_length_left;
 
+    vector<AP> AP_vector;
+
 public:
     // constructor and destructor
     Airodump(char* device);
-    ~Airodump();;
+    ~Airodump();
 
     void monitor();
-    int captureBeaconFrame(const u_char* packet);
-    void parseManagementFrame(const u_char* packet);
+    void captureBeaconFrame(const u_char* packet, int packet_len);
+    void parseManagementFrame(AP* target_AP, const u_char* packet);
+    void drawTable();
+    AP* checkVectorList(const u_int8_t* BSSID);
 };
 
 
